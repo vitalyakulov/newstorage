@@ -1,0 +1,10 @@
+*.a
+*.cmake
+*.txt
+.vscode/*
+**/CMakeFiles/*
+**/Makefile
+build/*
+**/myapp
+**/testfoo
+**/gtest/*
