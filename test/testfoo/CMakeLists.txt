@@ -20,21 +20,34 @@ ExternalProject_Get_Property(gtest source_dir binary_dir)
 add_library(libgtest IMPORTED STATIC GLOBAL)
 add_dependencies(libgtest gtest)
 
-# Set libgtest properties
-set_target_properties(libgtest PROPERTIES
-    "IMPORTED_LOCATION" "${binary_dir}/googlemock/gtest/libgtest.a"
-    "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}"
-)
-
 # Create a libgmock target to be used as a dependency by test programs
 add_library(libgmock IMPORTED STATIC GLOBAL)
 add_dependencies(libgmock gtest)
 
-# Set libgmock properties
-set_target_properties(libgmock PROPERTIES
-    "IMPORTED_LOCATION" "${binary_dir}/googlemock/libgmock.a"
-    "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}"
+
+IF ( WIN32 )
+    foreach( OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES} )
+        string( TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG )
+        set_target_properties( libgtest PROPERTIES 
+            "IMPORTED_LOCATION_${OUTPUTCONFIG}" "${binary_dir}/googlemock/gtest/${OUTPUTCONFIG}/gtest.lib" 
+            "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}"
+        )
+        set_target_properties( libgmock PROPERTIES 
+            "IMPORTED_LOCATION_${OUTPUTCONFIG}" "${binary_dir}/googlemock/${OUTPUTCONFIG}/gmock.lib" 
+            "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}"
+        )
+    endforeach( OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES )
+ELSE ( WIN32 )
+    set_target_properties( libgtest PROPERTIES 
+        "IMPORTED_LOCATION" "${binary_dir}/googlemock/gtest/libgtest.a" 
+        "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}"
 )
+    set_target_properties( libgmock PROPERTIES 
+        "IMPORTED_LOCATION" "${binary_dir}/googlemock/libgmock.a" 
+        "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}"
+)
+
+ENDIF ( WIN32 )
 
 # I couldn't make it work with INTERFACE_INCLUDE_DIRECTORIES
 include_directories("${source_dir}/googletest/include"
@@ -63,9 +76,3 @@ INCLUDE_DIRECTORIES(
 )
 
 INSTALL(TARGETS testfoo DESTINATION test)
-
-#find_package(PkgConfig)
-#pkg_check_modules(GTEST REQUIRED gtest>=1.7.0)
-#pkg_check_modules(GMOCK REQUIRED gmock>=1.7.0)
-
-
